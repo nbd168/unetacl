@@ -1,0 +1,21 @@
+{
+	"global": {
+		"save_client_state": false
+	},
+	"networks": {
+	},
+	"groups": {
+		"default": {
+			"flags": [],
+			"policy": {}
+		}
+	},
+	"default_policy": {
+		"drop": true
+	},
+	"clients": {
+		"default": {
+			"groups": [ "default" ]
+		}
+	}
+}

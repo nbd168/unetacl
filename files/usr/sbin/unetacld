@@ -1,0 +1,112 @@
+#!/usr/bin/env ucode
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2024 Felix Fietkau <nbd@nbd.name>
+ */
+'use strict';
+import { stdin } from "fs";
+import * as uloop from "uloop";
+import * as libubus from "ubus";
+import * as unetacl from "unetacl.service";
+import * as nl80211 from "nl80211";
+
+uloop.init();
+
+let ubus = libubus.connect();
+let obj = unetacl.init({
+	config_file: "/etc/unetacl/config.json",
+	state_file: "/etc/unetacl/state.json",
+}, ubus);
+if (!obj) {
+	warn(`failed to initialize unetacl core\n`);
+	exit(1);
+}
+
+let netdevs = {};
+
+function refresh_netdevs() {
+	netdevs = {};
+
+	let wdevs = ubus.call("network.wireless", "status");
+	for (let name, wdev in wdevs) {
+		for (let iface in wdev.interfaces) {
+			if (!iface.ifname)
+				continue;
+			if (!iface.config.tags ||
+			    index(iface.config.tags, "unetacl") < 0)
+				continue;
+
+			netdevs[iface.ifname] = true;
+			obj.netdev_attach(iface.ifname);
+		}
+	}
+}
+
+let wireless_sub = ubus.subscriber(() => {
+	refresh_netdevs();
+	return 0;
+});
+wireless_sub.subscribe("network.wireless");
+
+let netdev_sub = ubus.subscriber((msg) => {
+	if (msg.type != "up")
+		return;
+
+	let ifname = msg.data.name;
+	if (!ifname || !netdevs[ifname])
+		return;
+
+	obj.netdev_attach(ifname);
+	return 0;
+});
+netdev_sub.subscribe("network.device");
+
+let listener = ubus.listener("ubus.object.add", (event, msg) => {
+	if (msg.path == "network.wireless")
+		wireless_sub.subscribe(msg.path);
+	else if (msg.path == "network.device")
+		netdev_sub.subscribe(msg.path);
+});
+refresh_netdevs();
+
+let nl_listener = nl80211.listener((msg) => {
+	if (msg.cmd != nl80211.const.NL80211_CMD_NEW_STATION)
+		return;
+
+	msg = msg.msg;
+	if (!netdevs[msg.dev])
+		return;
+
+	let mac = msg.mac;
+	if (obj.clients[mac])
+		return;
+
+	obj.client_set(mac, {});
+});
+
+if (ARGV[0] == "-d") {
+	uloop.handle(stdin.fileno(), () => {
+		let line = trim(stdin.read("line"));
+		switch (line) {
+		case "dump":
+			warn(`result: ${sprintf("%.J", obj)}\n`);
+			break;
+		case "netdevs":
+			warn(`result: ${sprintf("%.J", obj.bpf.netdevs)}\n`);
+			break;
+		case "bpf":
+			warn(`result: ${sprintf("%.J", obj.bpf.dump())}\n`);
+			break;
+		case "clients":
+			warn(`clients: ${obj.client_get()}\n`);
+			break;
+		case "exit":
+			uloop.end();
+			break;
+		}
+	}, uloop.ULOOP_READ);
+}
+
+uloop.run();
+
+obj.close();
