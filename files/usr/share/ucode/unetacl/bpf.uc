@@ -232,6 +232,13 @@ function policy_set(client_id, network_id, action)
 	let ifindex = action.ifindex ?? 0;
 	let vlan = action.vlan ?? 0;
 	let vlan_proto = action.vlan_proto ?? 0x8100;
+	let netdev = action.device;
+	if (netdev) {
+		ifindex = netdev_ifindex(netdev);
+		if (!ifindex)
+			flags = UNETACL_ACTION_DROP;
+	}
+
 	if (ifindex) {
 		flags |= UNETACL_ACTION_REDIRECT;
 		if (vlan)

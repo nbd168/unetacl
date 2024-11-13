@@ -59,6 +59,7 @@ Each group can contain the following properties:
   - `"dest_mac"` (string): overwrite destination MAC address (e.g. for handling via routing or netfilter).
   - `"fwmark_val"` (int): modify packet fwmark
   - `"fwmark_mask"` (int): mask limiting fwmark changes
+  - `"device"` (string): redirect to a network device referenced by name
   - `"ifindex"` (int): redirect to a network device referenced by ifindex
   - `"vlan"` (int): add VLAN tag with the given VLAN ID
   - `"vlan_proto"` (int): protocol for added VLAN tag
@@ -78,5 +79,4 @@ The properties of each member object are the same as the properties for each gro
 ## TODO:
 
 - allow setting destination mac by device name
-- allow setting destination interface by device name
 
