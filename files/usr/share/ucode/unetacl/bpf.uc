@@ -211,11 +211,11 @@ function policy_set(client_id, network_id, action)
 
 	let mac = action.dest_mac;
 	if (mac) {
-		mac = split(action.dest_mac, ":");
+		mac = map(split(mac, ":"), hex);
 		if (length(mac) == 6)
 			flags |= UNETACL_ACTION_SET_DEST_MAC;
 		else
-			mac = null;
+			flags = UNETACL_ACTION_DROP;
 	}
 	if (!mac) {
 		mac = [ 0, 0, 0, 0, 0, 0 ];
