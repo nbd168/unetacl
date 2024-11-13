@@ -195,8 +195,11 @@ function policy_get(client_id, network_id)
 		ret.fwmark_val = data[7];
 		ret.fwmark_mask = data[8];
 	}
-	if (flags & UNETACL_ACTION_REDIRECT)
-		ret.ifindex = data[9];
+	if (flags & UNETACL_ACTION_REDIRECT) {
+		ret.device = utils.if_indextoname(data[9]);
+		if (!ret.device)
+			ret.ifindex = data[9];
+	}
 	if (flags & UNETACL_ACTION_REDIRECT_VLAN) {
 		ret.vlan = data[10];
 		ret.vlan_proto = vlan_proto_struct.unpack(substr(val, 22))[0];

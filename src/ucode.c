@@ -220,11 +220,27 @@ uc_snoop(uc_vm_t *vm, size_t nargs)
 	return uc_resource_new(snoop_type, s);
 }
 
+static uc_value_t *
+uc_if_indextoname(uc_vm_t *vm, size_t nargs)
+{
+	uc_value_t *arg = uc_fn_arg(0);
+	char buf[IFNAMSIZ + 1] = {};
+
+	if (ucv_type(arg) != UC_INTEGER)
+		return NULL;
+
+	if (!if_indextoname(ucv_int64_get(arg), buf))
+		return NULL;
+
+	return ucv_string_new(buf);
+}
+
 static const uc_function_list_t snoop_fns[] = {
 	{ "close", uc_snoop_close },
 };
 
 static const uc_function_list_t global_fns[] = {
+	{ "if_indextoname", uc_if_indextoname },
 	{ "inet_pton", uc_inet_pton },
 	{ "inet_ntop", uc_inet_ntop },
 	{ "snoop", uc_snoop },
