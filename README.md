@@ -57,6 +57,7 @@ Each group can contain the following properties:
   The objects can contain the following properties:
   - `"drop"` (bool): drop packets to this network
   - `"dest_mac"` (string): overwrite destination MAC address (e.g. for handling via routing or netfilter).
+  - `"dest_mac_device"` (string): overwrite destination MAC address with the one from the given device
   - `"fwmark_val"` (int): modify packet fwmark
   - `"fwmark_mask"` (int): mask limiting fwmark changes
   - `"device"` (string): redirect to a network device referenced by name
@@ -78,5 +79,4 @@ The properties of each member object are the same as the properties for each gro
 
 ## TODO:
 
-- allow setting destination mac by device name
 

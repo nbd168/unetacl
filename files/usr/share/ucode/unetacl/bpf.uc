@@ -213,6 +213,12 @@ function policy_set(client_id, network_id, action)
 	let flags = 0;
 
 	let mac = action.dest_mac;
+	let mac_dev = action.dest_mac_device;
+	if (mac_dev) {
+		mac = trim(readfile(`/sys/class/net/${mac_dev}/address`));
+		if (!mac)
+			flags = UNETACL_ACTION_DROP;
+	}
 	if (mac) {
 		mac = map(split(mac, ":"), hex);
 		if (length(mac) == 6)
