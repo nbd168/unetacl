@@ -32,6 +32,11 @@ export const client_flags = {
 	filter_multicast: (1 << 3),
 };
 
+function netdev_ifindex(name)
+{
+	return +readfile(`/sys/class/net/${name}/ifindex`);
+}
+
 function mac_parse(mac)
 {
 	mac = map(split(mac, ":"), hex);
@@ -256,7 +261,7 @@ function __netdev_detach(name)
 
 function netdev_attach(name)
 {
-	let ifindex = +readfile(`/sys/class/net/${name}/ifindex`);
+	let ifindex = netdev_ifindex(name);
 	if (!name || this.netdevs[name] == ifindex)
 		return;
 
@@ -268,7 +273,7 @@ function netdev_attach(name)
 
 function netdev_detach(name)
 {
-	let ifindex = +readfile(`/sys/class/net/${name}/ifindex`);
+	let ifindex = netdev_ifindex(name);
 	if (ifindex == this.netdevs[name])
 		__netdev_detach(name);
 
